@@ -1,8 +1,8 @@
 package murkeev.model;
 
 import jakarta.persistence.*;
+import jdk.jfr.Timespan;
 import lombok.Data;
-import lombok.Generated;
 import murkeev.enums.UserRole;
 
 import java.time.LocalDateTime;
@@ -20,18 +20,17 @@ public class User {
     @Column(nullable = false)
     private String username;
 
-    @Column(name = "passphrase_hash", nullable = false)
-    private String passphraseHash;
+    @Column(name = "passphrase", nullable = false)
+    private String passphrase;
 
-    @Column(unique = true)
-    private String email;
-
+    @Column(nullable = false)
     private String phone;
 
     @Column(name = "created_at")
+    @Timespan
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserRole role;
+    private UserRole role = UserRole.ROLE_USER;
 }
