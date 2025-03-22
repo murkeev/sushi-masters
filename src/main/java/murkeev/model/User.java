@@ -17,6 +17,9 @@ public class User {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
+    @Column(nullable = false)
+    private String username;
+
     @Column(name = "passphrase_hash", nullable = false)
     private String passphraseHash;
 
