@@ -1,7 +1,7 @@
 package murkeev.service;
 
 import lombok.AllArgsConstructor;
-import murkeev.dto.RegistrationRequestDto;
+import murkeev.dto.RegistrationRequest;
 import murkeev.exception.EntityNotFoundException;
 import murkeev.model.User;
 import murkeev.repository.UserRepository;
@@ -32,7 +32,7 @@ public class UserService {
     }
 
     @Transactional
-    public void addUser(RegistrationRequestDto requestDto) {
+    public void addUser(RegistrationRequest requestDto) {
         User user = modelMapper.map(requestDto, User.class);
         user.setPassphrase(passwordEncoder.encode(requestDto.passphrase()));
         try {
@@ -51,9 +51,5 @@ public class UserService {
         String username = authentication.getName();
         return userRepository.findByUsername(username).orElseThrow(
                 () -> new EntityNotFoundException(USER_NOT_FOUND));
-
-//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-//        return userRepository.findByUsername(userDetails.getUsername()).orElseThrow(
-//                () -> new EntityNotFoundException(USER_NOT_FOUND));
     }
 }

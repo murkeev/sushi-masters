@@ -1,4 +1,4 @@
-package murkeev.model.request;
+package murkeev.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

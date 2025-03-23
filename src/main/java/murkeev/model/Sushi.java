@@ -1,5 +1,6 @@
 package murkeev.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class Sushi {
     private String ingredients;
     private String image;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     @Enumerated(EnumType.STRING)
     @Column(name = "category", nullable = false)
     private SushiCategory category;

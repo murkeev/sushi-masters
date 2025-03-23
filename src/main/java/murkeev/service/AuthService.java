@@ -1,7 +1,7 @@
 package murkeev.service;
 
 import lombok.AllArgsConstructor;
-import murkeev.dto.RegistrationRequestDto;
+import murkeev.dto.RegistrationRequest;
 import murkeev.security.JwtTokenUtil;
 import murkeev.security.UserDetailsServiceImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,7 +24,7 @@ public class AuthService {
         return jwtTokenUtil.generateToken(userDetails);
     }
 
-    public String registration(RegistrationRequestDto request) {
+    public String registration(RegistrationRequest request) {
         userService.addUser(request);
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.username(), request.passphrase()));
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.username());

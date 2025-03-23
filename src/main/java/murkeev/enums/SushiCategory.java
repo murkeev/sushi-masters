@@ -1,13 +1,13 @@
 package murkeev.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum SushiCategory {
-    NIGIRI,
-    MAKI,
-    URAMAKI,
-    TEMAKI,
-    SASHIMI,
-    SPECIALTY_ROLLS,
-    VEGETARIAN,
-    SPICY_ROLLS,
-    SET_MENU
+    MAKI, NIGIRI, SASHIMI, ROLLS;
+
+    @JsonCreator
+    public static SushiCategory fromString(String value) {
+        return SushiCategory.valueOf(value.toUpperCase());
+    }
 }
+
