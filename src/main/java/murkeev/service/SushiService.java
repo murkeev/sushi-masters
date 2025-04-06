@@ -49,7 +49,6 @@ public class SushiService {
             List<Sushi> sushiList = sushiRequests.stream()
                     .map(request -> {
                         Sushi sushi = modelMapper.map(request, Sushi.class);
-                        // Додаємо грамівку
                         sushi.setWeight(request.getWeight() + "г");
                         return sushi;
                     })
@@ -71,6 +70,5 @@ public class SushiService {
         }
 
         return "";
-
     }
 }

@@ -23,10 +23,10 @@ public class UserService {
     private final ModelMapper modelMapper;
 
     @Transactional(readOnly = true)
-    public User checkUser(String login) {
+    public User checkUser(String phone) {
         User user;
-        user = userRepository.findByPhone(login).orElseThrow(
-                () -> new EntityNotFoundException(String.format("User with phone %s not found!", login)));
+        user = userRepository.findByPhone(phone).orElseThrow(
+                () -> new EntityNotFoundException(String.format("User with phone %s not found!", phone)));
         if (user == null) {
             throw new EntityNotFoundException("User is null.");
         }

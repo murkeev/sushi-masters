@@ -2,6 +2,7 @@ package murkeev.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -27,13 +28,43 @@ import java.util.List;
 public class SushiController {
     private final SushiService sushiService;
 
+    @Operation(
+            summary = "Get all sushi",
+            description = "Returns a list of all available sushi items"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved sushi list",
+            content = @Content(
+                    mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = Sushi.class))
+            )
+    )
     @GetMapping
     public ResponseEntity<List<Sushi>> getAllSushi() {
         return ResponseEntity.ok(sushiService.getAllSushi());
     }
 
+    @Operation(
+            summary = "Get sushi by ID",
+            description = "Returns a single sushi item by its ID"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Sushi found",
+                    content = @Content(schema = @Schema(implementation = Sushi.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Sushi not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @GetMapping("/id/{id}")
-    public ResponseEntity<Sushi> getSushiById(@PathVariable Long id) {
+    public ResponseEntity<Sushi> getSushiById(
+            @Parameter(description = "ID of sushi to retrieve", required = true)
+            @PathVariable Long id) {
         log.info("Getting sushi by id: {}", id);
         return sushiService.getSushiById(id)
                 .map(sushi -> {
@@ -46,8 +77,29 @@ public class SushiController {
                 });
     }
 
+    @Operation(
+            summary = "Get sushi by category",
+            description = "Returns a list of sushi items filtered by category"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successfully retrieved filtered sushi list",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = Sushi.class))
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid category",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @GetMapping("/by-category")
-    public ResponseEntity<List<Sushi>> getSushiByCategory(@RequestParam SushiCategory category) {
+    public ResponseEntity<List<Sushi>> getSushiByCategory(
+            @Parameter(description = "Category to filter by", required = true)
+            @RequestParam SushiCategory category) {
         List<Sushi> sushiList = sushiService.getSushiByCategory(category);
         return ResponseEntity.ok(sushiList);
     }
@@ -67,7 +119,11 @@ public class SushiController {
     })
     @PostMapping
     public ResponseEntity<List<Sushi>> createSushi(
-            @Parameter(description = "List of sushi details to be created")
+            @Parameter(
+                    description = "List of sushi items to create",
+                    required = true,
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = SushiRequest.class)))
+            )
             @RequestBody List<SushiRequest> sushiRequests) {
 
         log.info("Creating {} new sushi items", sushiRequests.size());
@@ -76,6 +132,18 @@ public class SushiController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedSushiList);
     }
 
+    @Operation(
+            summary = "Get all sushi categories",
+            description = "Returns a list of all available sushi categories"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved categories list",
+            content = @Content(
+                    mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = SushiCategory.class))
+            )
+    )
     @GetMapping("/categories")
     public ResponseEntity<List<SushiCategory>> getAllCategories() {
         List<SushiCategory> categories = Arrays.asList(SushiCategory.values());
