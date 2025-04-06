@@ -17,11 +17,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserService userService;
 
     @Override
-    public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
-        User user = userService.checkUser(login);
+    public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
+        User user = userService.checkUser(phone);
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassphrase(),
+                user.getPhone(),
+                user.getPassword(),
                 Set.of(user.getRole()));
     }
 }

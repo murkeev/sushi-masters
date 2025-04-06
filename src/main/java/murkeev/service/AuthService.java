@@ -17,17 +17,17 @@ public class AuthService {
     private final JwtTokenUtil jwtTokenUtil;
     private final UserDetailsServiceImpl userDetailsService;
 
-    public String authenticateAndGenerateToken(String login, String passphrase) {
-        userService.checkUser(login);
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(login, passphrase));
-        UserDetails userDetails = userDetailsService.loadUserByUsername(login);
+    public String authenticateAndGenerateToken(String phone, String password) {
+        userService.checkUser(phone);
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(phone, password));
+        UserDetails userDetails = userDetailsService.loadUserByUsername(phone);
         return jwtTokenUtil.generateToken(userDetails);
     }
 
     public String registration(RegistrationRequest request) {
         userService.addUser(request);
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.username(), request.passphrase()));
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.username());
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getPhone(), request.getPassword()));
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getPhone());
         return jwtTokenUtil.generateToken(userDetails);
     }
 }

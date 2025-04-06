@@ -18,12 +18,10 @@ public class User {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String username;
+    @Column(nullable = false)
+    private String password;
 
     @Column(nullable = false)
-    private String passphrase;
-
     private String name;
 
     @Column(nullable = false, unique = true)

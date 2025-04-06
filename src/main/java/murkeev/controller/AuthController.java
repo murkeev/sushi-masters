@@ -2,6 +2,7 @@ package murkeev.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import murkeev.dto.LoginRequest;
 import murkeev.dto.RegistrationRequest;
 import murkeev.dto.AuthResponse;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -21,13 +23,17 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegistrationRequest request) {
+        log.info("Registration request received for user: {}", request.getName());
         String token = authService.registration(request);
+        log.info("User successfully registered: {}", request.getName());
         return new ResponseEntity<>(new AuthResponse(token), HttpStatus.OK);
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        String token = authService.authenticateAndGenerateToken(request.username(), request.passphrase());
+        log.info("Login attempt for user: {}", request.phone());
+        String token = authService.authenticateAndGenerateToken(request.phone(), request.password());
+        log.info("User successfully authenticated: {}", request.phone());
         return ResponseEntity.ok(new AuthResponse(token));
     }
 }

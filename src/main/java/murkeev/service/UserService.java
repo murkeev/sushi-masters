@@ -2,6 +2,8 @@ package murkeev.service;
 
 import lombok.AllArgsConstructor;
 import murkeev.dto.RegistrationRequest;
+import murkeev.exception.EntityAlreadyExistsException;
+import murkeev.exception.EntityManipulationException;
 import murkeev.exception.EntityNotFoundException;
 import murkeev.model.User;
 import murkeev.repository.UserRepository;
@@ -23,8 +25,8 @@ public class UserService {
     @Transactional(readOnly = true)
     public User checkUser(String login) {
         User user;
-        user = userRepository.findByUsername(login).orElseThrow(
-                () -> new EntityNotFoundException(String.format("User with username %s not found!", login)));
+        user = userRepository.findByPhone(login).orElseThrow(
+                () -> new EntityNotFoundException(String.format("User with phone %s not found!", login)));
         if (user == null) {
             throw new EntityNotFoundException("User is null.");
         }
@@ -33,23 +35,37 @@ public class UserService {
 
     @Transactional
     public void addUser(RegistrationRequest requestDto) {
+        if (userRepository.findByPhone(requestDto.getPhone()).isPresent()) {
+            throw new EntityAlreadyExistsException("User with this phone already exists");
+        }
+
+        requestDto.setName(normalizeName(requestDto.getName()));
         User user = modelMapper.map(requestDto, User.class);
-        user.setPassphrase(passwordEncoder.encode(requestDto.passphrase()));
+        user.setPassword(passwordEncoder.encode(requestDto.getPassword()));
         try {
             userRepository.save(user);
         } catch (Exception e) {
-            throw new EntityNotFoundException("Failed in saving user");
+            throw new EntityManipulationException("Failed in saving user");
         }
     }
 
     @Transactional(readOnly = true)
     public User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             throw new IllegalArgumentException("No authenticated user found");
         }
-        String username = authentication.getName();
-        return userRepository.findByUsername(username).orElseThrow(
+        String phone = authentication.getName();
+        return userRepository.findByPhone(phone).orElseThrow(
                 () -> new EntityNotFoundException(USER_NOT_FOUND));
     }
+
+    public static String normalizeName(String name) {
+        if (name == null || name.isBlank()) {
+            return name;
+        }
+        name = name.trim().toLowerCase();
+        return name.substring(0, 1).toUpperCase() + name.substring(1);
+    }
+
 }
