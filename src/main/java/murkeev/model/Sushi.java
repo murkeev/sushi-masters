@@ -19,10 +19,10 @@ public class Sushi {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private String description;
     private BigDecimal price;
     private String ingredients;
     private String image;
+    private String weight;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     @Enumerated(EnumType.STRING)

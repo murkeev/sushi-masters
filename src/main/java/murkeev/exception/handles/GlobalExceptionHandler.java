@@ -3,6 +3,7 @@ package murkeev.exception.handles;
 import murkeev.exception.EntityAlreadyExistsException;
 import murkeev.exception.EntityManipulationException;
 import murkeev.exception.EntityNotFoundException;
+import murkeev.exception.SushiServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -48,6 +49,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> handleEntityManipulationExceptions(EntityManipulationException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage(), LocalDateTime.now()));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> handleSushiServiceException(SushiServiceException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage(), LocalDateTime.now()));
     }
 }
