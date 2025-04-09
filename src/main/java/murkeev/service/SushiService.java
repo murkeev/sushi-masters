@@ -10,6 +10,7 @@ import murkeev.model.Sushi;
 import murkeev.repository.SushiRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +23,7 @@ public class SushiService {
     private final SushiRepository sushiRepository;
     private final ModelMapper modelMapper;
     private final Validator validator;
+    private final FileUploadService fileUploadService;
 
     public List<Sushi> getAllSushi() {
         return sushiRepository.findAll();
@@ -35,30 +37,25 @@ public class SushiService {
         return sushiRepository.findByCategory(category);
     }
 
-    public List<Sushi> createSushi(List<SushiRequest> sushiRequests) {
-        List<String> validationErrors = sushiRequests.stream()
-                .map(this::validateSushiRequest)
-                .filter(error -> !error.isEmpty())
-                .collect(Collectors.toList());
-
-        if (!validationErrors.isEmpty()) {
-            throw new SushiServiceException("Validation failed: " + String.join(", ", validationErrors));
+    public Sushi createSushi(SushiRequest request, MultipartFile image) {
+        String validationError = validateSushiRequest(request);
+        if (!validationError.isEmpty()) {
+            throw new SushiServiceException("Validation failed: " + validationError);
         }
 
         try {
-            List<Sushi> sushiList = sushiRequests.stream()
-                    .map(request -> {
-                        Sushi sushi = modelMapper.map(request, Sushi.class);
-                        sushi.setWeight(request.getWeight() + "г");
-                        return sushi;
-                    })
-                    .collect(Collectors.toList());
+            Sushi sushi = modelMapper.map(request, Sushi.class);
+            sushi.setWeight(request.getWeight() + "г");
 
-            return sushiRepository.saveAll(sushiList);
+            String imageUrl = fileUploadService.uploadFile(image);
+            sushi.setImage(imageUrl);
+
+            return sushiRepository.save(sushi);
         } catch (RuntimeException e) {
-            throw new SushiServiceException("Failed to create sushi items");
+            throw new SushiServiceException("Failed to create sushi item");
         }
     }
+
 
     private String validateSushiRequest(SushiRequest sushiRequest) {
         Set<ConstraintViolation<SushiRequest>> violations = validator.validate(sushiRequest);

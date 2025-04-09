@@ -3,6 +3,7 @@ package murkeev.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import murkeev.dto.CartItemDTO;
+import murkeev.exception.EntityNotFoundException;
 import murkeev.model.Cart;
 import murkeev.model.CartItem;
 import murkeev.model.Sushi;
@@ -49,7 +50,7 @@ public class CartService {
     public CartItemDTO addItemToCart(UUID cartId, Long sushiId, int quantity) {
         Cart cart = getCartById(cartId);
         Sushi sushi = sushiRepository.findById(sushiId)
-                .orElseThrow(() -> new RuntimeException("Sushi not found with id: " + sushiId));
+                .orElseThrow(() -> new EntityNotFoundException("Sushi not found with id: " + sushiId));
 
         for (CartItem item : cart.getItems()) {
             if (item.getSushi().getId().equals(sushiId)) {
@@ -88,5 +89,46 @@ public class CartService {
         return cart.getItems().stream()
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Transactional
+    public Cart createGuestCart() {
+        Cart cart = new Cart();
+        cart.setItems(new ArrayList<>());
+        return cartRepository.save(cart);
+    }
+
+    @Transactional
+    public Cart getOrCreateGuestCart(UUID cartId) {
+        if (cartId != null) {
+            return getCartById(cartId);
+        }
+        return createGuestCart();
+    }
+
+    @Transactional
+    public CartItemDTO updateCartItemQuantity(UUID cartId, Long itemId, int quantity) {
+        try {
+            Cart cart = getCartById(cartId);
+            CartItem itemToUpdate = null;
+
+            for (CartItem item : cart.getItems()) {
+                if (item.getId().equals(itemId)) {
+                    itemToUpdate = item;
+                    break;
+                }
+            }
+
+            if (itemToUpdate == null) {
+                throw new EntityNotFoundException("Cart item not found with id: " + itemId);
+            }
+
+            itemToUpdate.setQuantity(quantity);
+            cartRepository.save(cart);
+
+            return modelMapper.map(itemToUpdate, CartItemDTO.class);
+        } catch (EntityNotFoundException e) {
+            throw new EntityNotFoundException("Cart item not found with id: " + itemId);
+        }
     }
 }
