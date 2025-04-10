@@ -1,5 +1,9 @@
 package murkeev.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +22,17 @@ import java.math.BigDecimal;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/cart")
+@Tag(name = "User Cart", description = "Endpoints for managing authenticated user's cart.")
 @RequiredArgsConstructor
 public class CartController {
     private final CartService cartService;
     private final UserService userService;
 
+    @Operation(summary = "Get current user's cart")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cart retrieved successfully"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<CartDTO> getCart() {
@@ -33,7 +43,12 @@ public class CartController {
         return ResponseEntity.ok(new CartDTO(cart));
     }
 
-
+    @Operation(summary = "Add item to cart")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Item added to cart"),
+            @ApiResponse(responseCode = "400", description = "Invalid sushi ID or quantity"),
+            @ApiResponse(responseCode = "404", description = "Sushi not found")
+    })
     @PostMapping("/items")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<CartItemDTO> addItemToCart(@RequestParam Long sushiId, @RequestParam int quantity) {
@@ -47,7 +62,11 @@ public class CartController {
         return ResponseEntity.ok(cartItemDTO);
     }
 
-
+    @Operation(summary = "Remove item from cart")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Item removed successfully"),
+            @ApiResponse(responseCode = "404", description = "Item not found")
+    })
     @DeleteMapping("/items/{itemId}")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Void> removeItemFromCart(@PathVariable Long itemId) {
@@ -60,6 +79,11 @@ public class CartController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Clear cart")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Cart cleared successfully"),
+            @ApiResponse(responseCode = "500", description = "Server error")
+    })
     @DeleteMapping
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Void> clearCart() {
@@ -71,6 +95,11 @@ public class CartController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Get total amount of cart")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cart total calculated"),
+            @ApiResponse(responseCode = "500", description = "Server error")
+    })
     @GetMapping("/total")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<BigDecimal> getCartTotal() {

@@ -7,8 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.annotation.security.RolesAllowed;
-import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import murkeev.dto.SushiRequest;
@@ -18,29 +17,21 @@ import murkeev.model.Sushi;
 import murkeev.service.FileUploadService;
 import murkeev.service.SushiService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/sushi")
+@Tag(name = "Sushi", description = "Operations related to sushi catalog and creation")
 @RequiredArgsConstructor
 public class SushiController {
     private final SushiService sushiService;
-    private final FileUploadService uploadService;
-
-    @PostMapping("/upload")
-    public ResponseEntity<String> upload(@RequestParam("file") MultipartFile file) {
-        String key = uploadService.uploadFile(file);
-        return ResponseEntity.ok("Uploaded with key: " + key);
-    }
 
     @Operation(
             summary = "Get all sushi",
@@ -135,11 +126,6 @@ public class SushiController {
     @PostMapping(consumes = {"multipart/form-data"})
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Sushi> createSushi(
-            @Parameter(
-                    description = "Sushi item to create",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = SushiRequest.class))
-            )
             @RequestPart("sushi") SushiRequest sushiRequest,
             @RequestPart("image") MultipartFile image
     ) {
