@@ -52,14 +52,18 @@ public class CartController {
     @PostMapping("/items")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<CartItemDTO> addItemToCart(@RequestParam Long sushiId, @RequestParam int quantity) {
-        User user = userService.getAuthenticatedUser();
-        log.info("Adding item to cart for user: {}, phone {}, sushi id: {}, quantity: {}",
-                user.getName(), user.getPhone(), sushiId, quantity);
-        Cart cart = cartService.getOrCreateCart(user);
-        log.info("Item successfully added to cart for user: {}, phone {}", user.getName(), user.getPhone());
-        CartItemDTO cartItemDTO = cartService.addItemToCart(cart.getId(), sushiId, quantity);
+        try {
+            User user = userService.getAuthenticatedUser();
+            log.info("Adding item to cart. User: {}, SushiId: {}, Quantity: {}", user.getName(), sushiId, quantity);
 
-        return ResponseEntity.ok(cartItemDTO);
+            Cart cart = cartService.getOrCreateCart(user);
+            CartItemDTO cartItemDTO = cartService.addItemToCart(cart.getId(), sushiId, quantity);
+            log.info("Item successfully added to cart for user: {}", user.getName());
+            return ResponseEntity.ok(cartItemDTO);
+        } catch (Exception e) {
+            log.error("Error adding item to cart. SushiId: {}, Quantity: {}: {}", sushiId, quantity, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Operation(summary = "Remove item from cart")

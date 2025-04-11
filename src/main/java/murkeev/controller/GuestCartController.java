@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import murkeev.dto.CartDTO;
 import murkeev.dto.CartItemDTO;
 import murkeev.exception.EntityManipulationException;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/guest/cart")
 @Tag(name = "Guest Cart", description = "Endpoints for managing the guest cart.")
@@ -63,12 +65,19 @@ public class GuestCartController {
             @RequestParam Long sushiId,
             @Parameter(description = "Quantity of items to add", required = true)
             @RequestParam int quantity) {
-        Cart cart = cartService.getOrCreateGuestCart(cartId);
-        CartItemDTO cartItem = cartService.addItemToCart(cart.getId(), sushiId, quantity);
-        return ResponseEntity.ok()
-                .header("Access-Control-Expose-Headers", "X-Cart-Id")
-                .header("X-Cart-Id", cart.getId().toString())
-                .body(cartItem);
+        try {
+            log.info("Adding item to guest cart. CartId: {}, SushiId: {}, Quantity: {}", cartId, sushiId, quantity);
+            Cart cart = cartService.getOrCreateGuestCart(cartId);
+            CartItemDTO cartItem = cartService.addItemToCart(cart.getId(), sushiId, quantity);
+            log.info("Item successfully added to guest cart: {}", cart.getId());
+            return ResponseEntity.ok()
+                    .header("Access-Control-Expose-Headers", "X-Cart-Id")
+                    .header("X-Cart-Id", cart.getId().toString())
+                    .body(cartItem);
+        } catch (Exception e) {
+            log.error("Error adding item to guest cart. CartId: {}, SushiId: {}: {}", cartId, sushiId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Operation(summary = "Remove item from cart")

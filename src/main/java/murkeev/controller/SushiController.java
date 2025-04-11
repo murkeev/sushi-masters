@@ -14,8 +14,9 @@ import murkeev.dto.SushiRequest;
 import murkeev.enums.SushiCategory;
 import murkeev.exception.handles.ErrorResponse;
 import murkeev.model.Sushi;
-import murkeev.service.FileUploadService;
+import murkeev.model.User;
 import murkeev.service.SushiService;
+import murkeev.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,6 +33,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SushiController {
     private final SushiService sushiService;
+    private final UserService userService;
 
     @Operation(
             summary = "Get all sushi",
@@ -105,8 +107,15 @@ public class SushiController {
     public ResponseEntity<List<Sushi>> getSushiByCategory(
             @Parameter(description = "Category to filter by", required = true)
             @RequestParam SushiCategory category) {
-        List<Sushi> sushiList = sushiService.getSushiByCategory(category);
-        return ResponseEntity.ok(sushiList);
+        try {
+            log.info("Getting sushi by category: {}", category);
+            List<Sushi> sushiList = sushiService.getSushiByCategory(category);
+            log.info("Retrieved {} sushi items for category: {}", sushiList.size(), category);
+            return ResponseEntity.ok(sushiList);
+        } catch (Exception e) {
+            log.error("Error getting sushi by category {}: {}", category, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -129,10 +138,28 @@ public class SushiController {
             @RequestPart("sushi") SushiRequest sushiRequest,
             @RequestPart("image") MultipartFile image
     ) {
-        log.info("Creating new sushi item: {}", sushiRequest.getName());
-        Sushi savedSushi = sushiService.createSushi(sushiRequest, image);
-        log.info("Successfully created sushi: {}", savedSushi.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedSushi);
+        try {
+            User admin = userService.getAuthenticatedUser();
+            log.info("Admin {} (phone: {}) is creating new sushi item: {}",
+                    admin.getName(),
+                    admin.getPhone(),
+                    sushiRequest.getName());
+
+            Sushi savedSushi = sushiService.createSushi(sushiRequest, image);
+
+            log.info("Admin {} successfully created sushi with ID: {}",
+                    admin.getName(),
+                    savedSushi.getId());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedSushi);
+        } catch (Exception e) {
+            log.error("Error creating sushi '{}' by admin {}: {}",
+                    sushiRequest.getName(),
+                    userService.getAuthenticatedUser().getName(),
+                    e.getMessage(),
+                    e);
+            throw e;
+        }
     }
 
     @Operation(
