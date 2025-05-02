@@ -2,8 +2,9 @@ package murkeev.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -13,13 +14,20 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-
 @Component
 public class JwtTokenUtil implements Serializable {
 
     public static final long JWT_TOKEN_VALIDITY = 10 * 60 * 60 * 1000L;
 
-    Key key = Keys.secretKeyFor(SignatureAlgorithm.HS384);
+    @Value("${jwt.secret}")
+    private String secret;
+
+    private Key key;
+
+    @PostConstruct
+    public void init() {
+        key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
 
     public String getUsernameFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);

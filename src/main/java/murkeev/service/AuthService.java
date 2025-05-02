@@ -26,7 +26,6 @@ public class AuthService {
 
     public String registration(RegistrationRequest request) {
         userService.addUser(request);
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getPhone(), request.getPassword()));
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getPhone());
         return jwtTokenUtil.generateToken(userDetails);
     }
