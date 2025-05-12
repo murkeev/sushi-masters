@@ -4,18 +4,21 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import murkeev.dto.AddItemRequest;
 import murkeev.dto.CartDTO;
 import murkeev.dto.CartItemDTO;
+import murkeev.exception.JsonInvalidFormatException;
 import murkeev.model.Cart;
 import murkeev.model.User;
 import murkeev.service.CartService;
 import murkeev.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 
@@ -51,20 +54,17 @@ public class CartController {
     })
     @PostMapping("/items")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
-    public ResponseEntity<CartItemDTO> addItemToCart(@RequestParam Long sushiId, @RequestParam int quantity) {
-        try {
+    public ResponseEntity<CartItemDTO> addItemToCart(@RequestBody AddItemRequest request) {
             User user = userService.getAuthenticatedUser();
-            log.info("Adding item to cart. User: {}, SushiId: {}, Quantity: {}", user.getName(), sushiId, quantity);
+            log.info("Adding item to cart. User: {}, SushiId: {}, Quantity: {}", user.getName(), request.getSushiId(), request.getQuantity());
 
-            Cart cart = cartService.getOrCreateCart(user);
-            CartItemDTO cartItemDTO = cartService.addItemToCart(cart.getId(), sushiId, quantity);
+            Cart cart = cartService.getOrCreateCart(user);;
+            CartItemDTO cartItemDTO = cartService.addItemToCart(cart.getId(), request.getSushiId(), request.getQuantity());
             log.info("Item successfully added to cart for user: {}", user.getName());
+
             return ResponseEntity.ok(cartItemDTO);
-        } catch (Exception e) {
-            log.error("Error adding item to cart. SushiId: {}, Quantity: {}: {}", sushiId, quantity, e.getMessage(), e);
-            throw e;
-        }
     }
+
 
     @Operation(summary = "Remove item from cart")
     @ApiResponses({

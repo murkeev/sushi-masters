@@ -1,6 +1,7 @@
 package murkeev.model;
 
 import jakarta.persistence.*;
+import jdk.jfr.Category;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,4 +31,13 @@ public class CartItem {
 
     @Column(nullable = false)
     private BigDecimal price;
+
+    @Column(nullable = false)
+    private String image;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private String weight;
 }

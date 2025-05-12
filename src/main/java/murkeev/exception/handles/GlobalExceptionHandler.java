@@ -1,13 +1,12 @@
 package murkeev.exception.handles;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
-import murkeev.exception.EntityAlreadyExistsException;
-import murkeev.exception.EntityManipulationException;
-import murkeev.exception.EntityNotFoundException;
-import murkeev.exception.SushiServiceException;
+import murkeev.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -88,5 +87,32 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<?> handleMissingRequestBody(HttpMessageNotReadableException e, HttpServletRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                        "timestamp", LocalDateTime.now(),
+                        "status", 400,
+                        "error", "Bad Request",
+                        "message", "the request body is not transmitted or has an incorrect format",
+                        "path", request.getRequestURI()
+                ));
+    }
+
+    @ExceptionHandler(JsonInvalidFormatException.class)
+    public ResponseEntity<ErrorResponse> handleJsonInvalidFormatException(JsonInvalidFormatException e) {
+        log.error("Invalid JSON format: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage(), LocalDateTime.now()));
+    }
+
+    @ExceptionHandler(CartItemCreationException.class)
+    public ResponseEntity<ErrorResponse> handleCartItemCreationException(CartItemCreationException ex) {
+        log.error("Cart item creation failed: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Failed to process cart item", LocalDateTime.now()));
     }
 }
