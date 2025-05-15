@@ -93,11 +93,16 @@ public class CartService {
     }
 
     @Transactional
-    public void removeItemFromCart(UUID cartId, Long itemId) {
+    public void removeItemFromCart(UUID cartId, Long sushiId) {
         Cart cart = getCartById(cartId);
-        cart.getItems().removeIf(item -> item.getId().equals(itemId));
+        boolean removed = cart.getItems().removeIf(item ->
+                item.getSushi() != null && item.getSushi().getId().equals(sushiId));
+        if (!removed) {
+            throw new EntityNotFoundException("Cart item with sushiId " + sushiId + " not found in cart.");
+        }
         cartRepository.save(cart);
     }
+
 
     @Transactional
     public void clearCart(UUID cartId) {

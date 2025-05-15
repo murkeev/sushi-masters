@@ -1,6 +1,8 @@
 package murkeev.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -9,16 +11,14 @@ import lombok.extern.slf4j.Slf4j;
 import murkeev.dto.AddItemRequest;
 import murkeev.dto.CartDTO;
 import murkeev.dto.CartItemDTO;
-import murkeev.exception.JsonInvalidFormatException;
+import murkeev.exception.handles.ErrorResponse;
 import murkeev.model.Cart;
 import murkeev.model.User;
 import murkeev.service.CartService;
 import murkeev.service.UserService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 
@@ -46,12 +46,16 @@ public class CartController {
         return ResponseEntity.ok(new CartDTO(cart));
     }
 
-    @Operation(summary = "Add item to cart")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Item added to cart"),
-            @ApiResponse(responseCode = "400", description = "Invalid sushi ID or quantity"),
-            @ApiResponse(responseCode = "404", description = "Sushi not found")
-    })
+    @Operation(
+            summary = "Add an item to the cart",
+            description = "Adds a specific item to the user's shopping cart. If the item already exists in the cart, its quantity will be updated. Returns the updated cart item.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Item successfully added to the cart", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CartItemDTO.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid sushi ID or quantity provided", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "Sushi not found with the provided ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            }
+    )
+
     @PostMapping("/items")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<CartItemDTO> addItemToCart(@RequestBody AddItemRequest request) {
