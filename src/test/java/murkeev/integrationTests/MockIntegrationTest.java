@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class IntegrationTests {
+public class MockIntegrationTest {
 
     @Mock
     private CartService cartService;
@@ -35,6 +35,41 @@ public class IntegrationTests {
 
     @InjectMocks
     private OrderService orderService;
+
+    @Test
+    void createOrder_WithMocks_ShouldReturnOrder_WithPerformance() {
+        UUID cartId = UUID.randomUUID();
+
+        Cart cart = new Cart();
+        CartItem item = new CartItem();
+        item.setPrice(BigDecimal.valueOf(10));
+        item.setQuantity(2);
+        cart.setItems(List.of(item));
+
+        when(cartService.getCartById(cartId)).thenReturn(cart);
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order order = invocation.getArgument(0);
+            BigDecimal total = cart.getItems().stream()
+                    .map(i -> i.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            order.setTotalAmount(total);
+            return order;
+        });
+        when(orderItemRepository.save(any(OrderItem.class))).thenAnswer(i -> i.getArgument(0));
+
+        long start = System.nanoTime();
+        Order order = orderService.createOrder(cartId, "Test Customer", "123456789", "Test Address");
+        long duration = System.nanoTime() - start;
+
+        System.out.println("createOrder_WithMocks execution time (ns): " + duration);
+
+        assertNotNull(order);
+        assertEquals(BigDecimal.valueOf(20), order.getTotalAmount());
+        assertFalse(order.getItems().isEmpty());
+
+        verify(orderRepository).save(any());
+        verify(orderItemRepository, times(cart.getItems().size())).save(any());
+    }
 
     @Test
     void createOrder_ShouldReturnOrder() {
